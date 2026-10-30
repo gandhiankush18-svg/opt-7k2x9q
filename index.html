@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Options P&L">
+<title>Options P&L Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f4f5f8;--card:#ffffff;--ink:#111827;--mut:#6b7280;--line:#e5e7eb;--soft:#f3f4f6;--pos:#0e8a5f;--neg:#d6403a;--acc:#3056d3;--accSoft:#e8eefc;--shadow:0 1px 2px rgba(16,24,40,.05)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1015;--card:#161a21;--ink:#e9ecf1;--mut:#8b93a3;--line:#262b35;--soft:#1d222b;--pos:#35c48f;--neg:#ff6d66;--acc:#6f95ff;--accSoft:#1e2a47;--shadow:none}}
+:root[data-theme="dark"]{--bg:#0d1015;--card:#161a21;--ink:#e9ecf1;--mut:#8b93a3;--line:#262b35;--soft:#1d222b;--pos:#35c48f;--neg:#ff6d66;--acc:#6f95ff;--accSoft:#1e2a47;--shadow:none}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-feature-settings:"tnum"}
+.wrap{max-width:1320px;margin:0 auto;padding:20px 16px 56px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}
+h1{font-size:21px;margin:0;font-weight:700;letter-spacing:-.3px}
+.sub{color:var(--mut);font-size:12px;margin-top:3px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button,select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+button:hover,select:hover{border-color:var(--acc)}
+.primary{background:var(--acc);color:#fff;border-color:var(--acc)}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0 10px;margin-bottom:6px}
+.filters{display:flex;flex-wrap:wrap;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;align-items:flex-end;box-shadow:var(--shadow)}
+.f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.f>label{font-size:10.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.seg{display:inline-flex;background:var(--soft);border-radius:9px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:5px 11px;border-radius:7px;font-size:13px;color:var(--mut)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 10px;font-size:12.5px;color:var(--mut)}
+.chip.on{background:var(--accSoft);border-color:var(--acc);color:var(--acc);font-weight:600}
+.active{font-size:12px;color:var(--mut);margin-top:8px;min-height:16px}
+.active b{color:var(--ink);font-weight:600}
+.active a{color:var(--acc);cursor:pointer;margin-left:8px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:10px;margin:8px 0 14px}
+.k{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 15px;box-shadow:var(--shadow)}
+.k .l{font-size:10.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.k .v{font-size:23px;font-weight:700;margin-top:5px;letter-spacing:-.4px;white-space:nowrap}
+.k .s{font-size:11.5px;color:var(--mut);margin-top:3px}
+.k.fy{border-color:var(--acc);background:linear-gradient(180deg,var(--accSoft),var(--card))}
+.k.fy .chips{margin-top:8px}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;min-width:0;box-shadow:var(--shadow)}
+.ch-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.card h2{font-size:14px;margin:0;font-weight:650}
+.card .hint{font-size:11.5px;color:var(--mut);margin-top:2px}
+.c12{grid-column:span 12}.c8{grid-column:span 8}.c7{grid-column:span 7}.c5{grid-column:span 5}.c6{grid-column:span 6}.c4{grid-column:span 4}
+@media(max-width:960px){.c8,.c7,.c5,.c6,.c4{grid-column:span 12}}
+.ch{position:relative;height:290px}.ch.t{height:330px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:10.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;font-weight:600;position:sticky;top:0;background:var(--card);cursor:pointer;user-select:none}
+th:hover{color:var(--ink)}th .ar{font-size:9px;margin-left:3px}
+tbody tr:hover{background:var(--soft)}
+tr.tot td{font-weight:700;border-top:2px solid var(--line)}
+.sc{overflow:auto;max-height:360px}
+.note{font-size:12px;color:var(--mut);margin-top:8px}
+#banner{display:none;background:#fff4e5;color:#7a4a00;border:1px solid #f0c987;border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:13px}
+@media(max-width:700px){.bar{position:static}}
+.empty{color:var(--mut);font-size:13px;padding:30px 0;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Options P&amp;L Dashboard</h1>
+    <div class="sub" id="status">Loading…</div>
+  </div>
+  <div class="btns">
+    <button id="refresh">↻ Refresh</button>
+    <button id="upl">Load Excel / CSV</button>
+    <button id="theme" title="Toggle light / dark">Light / Dark</button>
+    <input type="file" id="file" accept=".xls,.xlsx,.csv" hidden>
+  </div>
+</header>
+<div id="banner"></div>
+
+<div class="bar">
+  <div class="filters">
+    <div class="f" style="flex:1 1 360px"><label>Months (expiry)</label><div class="chips" id="months"></div></div>
+    <div class="f"><label>Positions</label><div class="seg" id="status-f"><button data-v="all" class="on">All</button><button data-v="open">Open</button><button data-v="closed">Closed</button></div></div>
+    <div class="f"><label>Instrument</label><div class="seg" id="inst"><button data-v="" class="on">All</button><button data-v="OPTIDX">Index</button><button data-v="OPTSTK">Stock</button></div></div>
+    <div class="f"><label>Symbol</label><select id="sym"></select></div>
+    <div class="f"><label>Option</label><div class="seg" id="opt"><button data-v="" class="on">All</button><button data-v="CE">CE</button><button data-v="PE">PE</button></div></div>
+    <div class="f"><label>&nbsp;</label><button id="clear">Clear filters</button></div>
+  </div>
+  <div class="active" id="activeF"></div>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="grid">
+  <div class="card c12">
+    <div class="ch-h"><div><h2 id="t-period">Gross MTM by month</h2><div class="hint">Expiry-date basis. Click a bar to filter to that month.</div></div>
+      <div class="seg" id="gran"><button data-v="week">Weekly</button><button data-v="month" class="on">Monthly</button><button data-v="fy">Yearly</button></div></div>
+    <div class="ch t"><canvas id="cPeriod"></canvas></div>
+  </div>
+  <div class="card c8"><div class="ch-h"><div><h2>Cumulative MTM and drawdown</h2><div class="hint">Month-end basis</div></div></div><div class="ch t"><canvas id="cCum"></canvas></div></div>
+  <div class="card c4"><div class="ch-h"><div><h2>CE vs PE</h2><div class="hint">Click a bar to filter</div></div></div><div class="ch" style="height:210px"><canvas id="cOpt"></canvas></div><div id="optTbl"></div></div>
+  <div class="card c6"><div class="ch-h"><div><h2>P&amp;L by symbol</h2><div class="hint">Click a bar to filter</div></div></div><div class="sc" style="max-height:340px"><div class="ch" id="symBox"><canvas id="cSym"></canvas></div></div></div>
+  <div class="card c6"><div class="ch-h"><div><h2>Where the P&amp;L comes from</h2><div class="hint">Total MTM of contracts grouped by size of result · count on bar</div></div></div><div class="ch t"><canvas id="cBucket"></canvas></div></div>
+  <div class="card c12"><div class="ch-h"><div><h2 id="t-ptbl">Period summary</h2><div class="hint">Click a column to sort · turnover = Σ|MTM| of closed contracts</div></div></div><div class="sc" id="periodTbl"></div></div>
+  <div class="card c6"><div class="ch-h"><h2>Top 10 winners</h2></div><div class="sc" id="win"></div></div>
+  <div class="card c6"><div class="ch-h"><h2>Top 10 losers</h2></div><div class="sc" id="loss"></div></div>
+  <div class="card c6"><div class="ch-h"><h2>Open positions</h2></div><div class="sc" id="open"></div></div>
+  <div class="card c6"><div class="ch-h"><h2>Charges (from statements)</h2></div><div class="sc" id="chg"></div><div class="note">Charges come per statement, not per trade. They feed Net P&amp;L only when Positions, Instrument, Symbol and Option are all set to All, and only for statements overlapping the selected months.</div></div>
+</div>
+</div>
+
+<script>
+/* ===================== CONFIG ===================== */
+const CONFIG = {
+  DATA_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHQQxoS1P4lp1E3d5_vhksAFTY7PPAZ9eZDZ6w6Bkax8MR8dHOWJttT9aduJT-2g/pub?gid=843509527&single=true&output=csv",
+  CHARGES_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHQQxoS1P4lp1E3d5_vhksAFTY7PPAZ9eZDZ6w6Bkax8MR8dHOWJttT9aduJT-2g/pub?gid=915242808&single=true&output=csv",
+  REFRESH_MINUTES: 5,
+  AVG_EXCLUDE_MONTHS: ["2026-04"]
+};
+const EMBED_ROWS = [];
+const EMBED_CHARGES = {"Period From":"01-04-2026","Period To":"31-03-2027","STT":0,"SEBI Chrg":0,"Txn Chrg":0,"Stamp Duty":0,"IGST":0};
+/* ================================================== */
+
+const $ = id => document.getElementById(id);
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const R = {ins:0,sym:1,exp:2,opt:3,strike:4,pq:5,pv:6,sq:7,sv:8,nq:9,nv:10,mtm:11};
+let ALL=[], CHG=[], charts={}, srcLabel="";
+const S = {fys:new Set(), months:new Set(), status:"all", inst:"", sym:"", opt:"", gran:"month"};
+const sorts = {};
+
+const num = v => { if (v===null||v===undefined||v==="") return 0; const n=parseFloat(String(v).replace(/[,₹\s]/g,"")); return isNaN(n)?0:n; };
+function parseDate(v){
+  if (v instanceof Date) return v.toISOString().slice(0,10);
+  if (typeof v==="number" && v>20000 && v<80000) return new Date(Math.round((v-25569)*86400000)).toISOString().slice(0,10);
+  const s=String(v||"").trim(); let m;
+  if (m=s.match(/^(\d{4})-(\d{2})-(\d{2})/)) return `${m[1]}-${m[2]}-${m[3]}`;
+  if (m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/)) return `${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`;
+  return "";
+}
+const key = s => String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+function parseCSV(t){
+  const out=[]; let row=[], f="", q=false;
+  for (let i=0;i<t.length;i++){ const c=t[i];
+    if(q){ if(c==='"'){ if(t[i+1]==='"'){f+='"';i++} else q=false } else f+=c }
+    else if(c==='"') q=true;
+    else if(c===","){row.push(f);f=""}
+    else if(c==="\n"||c==="\r"){ if(c==="\r"&&t[i+1]==="\n")i++; row.push(f);f="";out.push(row);row=[] }
+    else f+=c }
+  if(f!==""||row.length){row.push(f);out.push(row)}
+  return out;
+}
+function tableToRows(aoa){
+  const h=aoa.findIndex(r=>r.some(c=>key(c)==="symbol")&&r.some(c=>key(c)==="mtm"));
+  if(h<0) return [];
+  const idx={}; aoa[h].forEach((c,i)=>{idx[key(c)]=i;});
+  const g=(r,k)=>r[idx[k]]; const rows=[];
+  for(let i=h+1;i<aoa.length;i++){
+    const r=aoa[i]; const ins=String(g(r,"index")||"").trim().toUpperCase();
+    if(!/^(OPT|FUT)/.test(ins)) continue;
+    const exp=parseDate(g(r,"expirydate")); if(!exp) continue;
+    rows.push([ins,String(g(r,"symbol")).trim(),exp,String(g(r,"opt")||"").trim().toUpperCase(),num(g(r,"strikeprice")),
+      num(g(r,"purchaseqty")),num(g(r,"purchasevalue")),num(g(r,"saleqty")),num(g(r,"salevalue")),num(g(r,"netqty")),num(g(r,"netvalue")),num(g(r,"mtm"))]);
+  }
+  return rows;
+}
+function tableToCharges(aoa){
+  const h=aoa.findIndex(r=>r.some(c=>key(c)==="stt"));
+  if(h<0) return [];
+  const idx={}; aoa[h].forEach((c,i)=>idx[key(c)]=i); const out=[];
+  for(let i=h+1;i<aoa.length;i++){ const r=aoa[i]; if(!r||r.every(c=>c===""||c==null)) continue;
+    const f=parseDate(r[idx["periodfrom"]]), t=parseDate(r[idx["periodto"]]); if(!f||!t) continue;
+    out.push({from:f,to:t,stt:num(r[idx["stt"]]),sebi:num(r[idx["sebichrg"]]),txn:num(r[idx["txnchrg"]]),stamp:num(r[idx["stampduty"]]),igst:num(r[idx["igst"]])}); }
+  return out;
+}
+function footerCharges(aoa,rows){
+  const find=lab=>{ for(const r of aoa) for(let c=0;c<r.length-1;c++) if(String(r[c]).trim()===lab) return num(r[c+1]); return 0; };
+  const fromCell=(()=>{ for(const r of aoa) for(let c=0;c<r.length-1;c++){ if(key(r[c])==="datefrom") return [parseDate(r[c+1]), (()=>{for(let k=c+2;k<r.length-1;k++) if(key(r[k])==="dateto") return parseDate(r[k+1]); return "";})()]; } return null; })();
+  if(!rows.length) return [];
+  const ds=rows.map(r=>r[2]).sort();
+  const [f,t]=fromCell&&fromCell[0]?fromCell:[ds[0],ds[ds.length-1]];
+  return [{from:f,to:t||ds[ds.length-1],stt:find("STT"),sebi:find("SEBI CHRG."),txn:find("Trnx.Chrg."),stamp:find("STAMP DUTY"),igst:find("IGST/UTT")}];
+}
+function embedded(){
+  ALL=EMBED_ROWS.slice(); const c=EMBED_CHARGES;
+  CHG=[{from:parseDate(c["Period From"]),to:parseDate(c["Period To"]),stt:c["STT"],sebi:c["SEBI Chrg"],txn:c["Txn Chrg"],stamp:c["Stamp Duty"],igst:c["IGST"]}];
+  srcLabel=ALL.length?"Embedded snapshot":"No data loaded";
+}
+async function load(){
+  $("banner").style.display="none";
+  if(CONFIG.DATA_CSV_URL){
+    try{
+      const get=u=>fetch(u,{cache:"no-store",credentials:"omit",referrerPolicy:"no-referrer"});
+      const d=await get(CONFIG.DATA_CSV_URL); if(!d.ok) throw new Error("HTTP "+d.status);
+      ALL=tableToRows(parseCSV(await d.text())); CHG=[];
+      if(CONFIG.CHARGES_CSV_URL){ const c=await get(CONFIG.CHARGES_CSV_URL).catch(()=>null); if(c&&c.ok) CHG=tableToCharges(parseCSV(await c.text())); }
+      srcLabel="Google Sheet";
+    }catch(e){ embedded(); $("banner").style.display="block"; $("banner").textContent="Could not read the Google Sheet ("+e.name+": "+e.message+"; page opened from "+location.protocol+"//"+(location.host||"local file")+"). Showing the embedded snapshot. If the link opens in your browser tab but fails here, host this page on a web address (e.g. GitHub Pages) or use Load Excel / CSV."; console.error("Sheet load failed",e); }
+  } else embedded();
+  afterLoad();
+}
+function afterLoad(){
+  const fys=fyList();
+  const keep=[...S.fys].filter(f=>fys.includes(f));
+  S.fys=new Set(keep.length?keep:[fys.includes(curFY())?curFY():fys[fys.length-1]]);
+  S.months=new Set([...S.months].filter(m=>ALL.some(r=>r[2].slice(0,7)===m)));
+  render();
+  $("status").textContent=`${srcLabel} · ${ALL.length} contracts · expiries ${fmtD(minMax()[0])} to ${fmtD(minMax()[1])} · updated ${new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"})}`;
+}
+
+/* ---------- helpers ---------- */
+const minMax=()=>{ const d=ALL.map(r=>r[2]).sort(); return [d[0],d[d.length-1]]; };
+function fmtD(s){ if(!s) return "–"; const [y,m,d]=s.split("-"); return `${+d} ${MON[+m-1]} ${y}`; }
+const fyOf=iso=>{ const y=+iso.slice(0,4), m=+iso.slice(5,7); return m>=4?y:y-1; };
+const fyLabel=f=>`FY${String(f).slice(2)}-${String(f+1).slice(2)}`;
+const curFY=()=>{ const d=new Date(); return d.getMonth()>=3?d.getFullYear():d.getFullYear()-1; };
+const fyList=()=>[...new Set(ALL.map(r=>fyOf(r[2])))].sort();
+const mLabel=k=>{ const [y,m]=k.split("-"); return `${MON[+m-1]} ${y.slice(2)}`; };
+const thisMonth=()=>{ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; };
+const inr=n=>(n<0?"-":"")+"₹"+Math.abs(Math.round(n)).toLocaleString("en-IN");
+function inrS(n){ const a=Math.abs(n), s=n<0?"-":""; if(a>=1e7) return s+"₹"+(a/1e7).toFixed(2)+" Cr"; if(a>=1e5) return s+"₹"+(a/1e5).toFixed(2)+" L"; return s+"₹"+Math.round(a).toLocaleString("en-IN"); }
+const inrL=n=>(n<0?"-":"")+"₹"+(Math.abs(n)/1e5).toFixed(2)+"L";
+const cls=n=>n>0?"pos":n<0?"neg":"";
+const pct=n=>(n*100).toFixed(1)+"%";
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const isClosed=r=>r[R.nq]===0;
+
+function pKey(iso){
+  if(S.gran==="month") return iso.slice(0,7);
+  if(S.gran==="fy") return "FY"+fyOf(iso);
+  const d=new Date(iso+"T00:00:00Z"); d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7)); return d.toISOString().slice(0,10);
+}
+function pLabel(k){
+  if(S.gran==="month") return mLabel(k);
+  if(S.gran==="fy") return fyLabel(+k.slice(2));
+  return "Wk "+fmtD(k).replace(/ \d{4}$/,"");
+}
+
+/* ---------- filtering ---------- */
+function base(){ return ALL.filter(r=>S.fys.has(fyOf(r[2]))); }
+function filtered(ignoreStatus){
+  return base().filter(r=>(!S.months.size||S.months.has(r[2].slice(0,7)))&&(!S.inst||r[0]===S.inst)&&(!S.sym||r[1]===S.sym)&&(!S.opt||r[3]===S.opt)
+    &&(ignoreStatus||S.status==="all"||(S.status==="closed"?isClosed(r):!isClosed(r))));
+}
+const narrowed=()=>S.status!=="all"||S.inst||S.sym||S.opt;
+
+/* ---------- UI: filters ---------- */
+function drawFilters(){
+  const ms=[...new Set(base().map(r=>r[2].slice(0,7)))].sort();
+  $("months").innerHTML=`<button class="chip ${S.months.size?"":"on"}" data-m="">All</button>`+ms.map(m=>`<button class="chip ${S.months.has(m)?"on":""}" data-m="${m}">${mLabel(m)}</button>`).join("");
+  $("months").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{ const m=b.dataset.m; if(!m) S.months.clear(); else S.months.has(m)?S.months.delete(m):S.months.add(m); render(); });
+  const syms=[...new Set(ALL.filter(r=>!S.inst||r[0]===S.inst).map(r=>r[1]))].sort();
+  if(S.sym&&!syms.includes(S.sym)) S.sym="";
+  $("sym").innerHTML=`<option value="">All ${S.inst==="OPTIDX"?"indices":S.inst==="OPTSTK"?"stocks":"symbols"} (${syms.length})</option>`+syms.map(s=>`<option ${s===S.sym?"selected":""}>${s}</option>`).join("");
+  [["status-f","status"],["inst","inst"],["opt","opt"],["gran","gran"]].forEach(([id,k])=>$(id).querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.v===S[k])));
+  const parts=[];
+  parts.push(`<b>${[...S.fys].sort().map(fyLabel).join(", ")}</b>`);
+  if(S.months.size) parts.push(`<b>${[...S.months].sort().map(mLabel).join(", ")}</b>`);
+  if(S.status!=="all") parts.push(`<b>${S.status==="open"?"Open":"Closed"} positions</b>`);
+  if(S.inst) parts.push(`<b>${S.inst==="OPTIDX"?"Index":"Stock"} options</b>`);
+  if(S.sym) parts.push(`<b>${S.sym}</b>`);
+  if(S.opt) parts.push(`<b>${S.opt}</b>`);
+  $("activeF").innerHTML="Showing: "+parts.join(" · ")+(S.months.size||narrowed()?`<a id="clr2">clear</a>`:"");
+  if($("clr2")) $("clr2").onclick=clearAll;
+}
+function clearAll(){ S.months.clear(); S.status="all"; S.inst=""; S.sym=""; S.opt=""; render(); }
+
+/* ---------- charts ---------- */
+const valueLabels={id:"vl",afterDatasetsDraw(chart,a,o){
+  if(!o||!o.on) return; const ctx=chart.ctx, ds=chart.data.datasets[0], meta=chart.getDatasetMeta(0), hz=chart.options.indexAxis==="y";
+  ctx.save(); ctx.font="600 11px Inter, sans-serif"; ctx.fillStyle=css("--ink");
+  meta.data.forEach((el,i)=>{ const v=ds.data[i]; const t=o.fmt(v,i); if(!t) return;
+    if(hz){ ctx.textAlign=v>=0?"left":"right"; ctx.textBaseline="middle"; ctx.fillText(t,el.x+(v>=0?5:-5),el.y); }
+    else { ctx.textAlign="center"; ctx.textBaseline=v>=0?"bottom":"top"; ctx.fillText(t,el.x,el.y+(v>=0?-5:5)); } });
+  ctx.restore(); }};
+function mk(id,cfg){ if(charts[id]) charts[id].destroy(); cfg.plugins=[valueLabels]; charts[id]=new Chart($(id).getContext("2d"),cfg); }
+function tipBase(){ return {backgroundColor:css("--card"),titleColor:css("--ink"),bodyColor:css("--ink"),borderColor:css("--line"),borderWidth:1,padding:10,displayColors:false,titleFont:{weight:"600"}}; }
+function axes(hz,yfmt){
+  const t={color:css("--mut"),font:{size:11}}, g={color:css("--line")};
+  const val={ticks:{...t,callback:v=>yfmt?yfmt(v):inrS(v)},grid:g,grace:"12%"}, cat={ticks:{...t,autoSkip:!hz,maxRotation:0},grid:{display:false}};
+  return hz?{x:val,y:cat}:{x:cat,y:val};
+}
+const colorBy=v=>v>=0?css("--pos"):css("--neg");
+
+/* ---------- tables ---------- */
+function table(el,cols,rows,def,totalRow){
+  const st=sorts[el]||(sorts[el]=def||{k:null,d:-1});
+  const data=rows.slice(); if(st.k!==null){ const c=cols.find(c=>c.k===st.k); data.sort((a,b)=>{ const x=c.v(a), y=c.v(b); return (x<y?-1:x>y?1:0)*st.d; }); }
+  const head=cols.map(c=>`<th data-k="${c.k}">${c.l}${st.k===c.k?`<span class="ar">${st.d>0?"▲":"▼"}</span>`:""}</th>`).join("");
+  const body=data.map(r=>`<tr>${cols.map(c=>`<td class="${c.c?c.c(r):""}">${c.f?c.f(r):c.v(r)}</td>`).join("")}</tr>`).join("");
+  $(el).innerHTML=data.length?`<table><thead><tr>${head}</tr></thead><tbody>${body}${totalRow||""}</tbody></table>`:`<div class="empty">Nothing in this selection</div>`;
+  $(el).querySelectorAll("th").forEach(th=>th.onclick=()=>{ const k=th.dataset.k; if(st.k===k) st.d*=-1; else {st.k=k; st.d=-1;} table(el,cols,rows,def,totalRow); });
+}
+
+/* ---------- render ---------- */
+function render(){
+  drawFilters();
+  const rows=filtered(), closed=rows.filter(isClosed);
+  const tot=rows.reduce((a,r)=>a+r[R.mtm],0);
+  const wins=closed.filter(r=>r[R.mtm]>0), losses=closed.filter(r=>r[R.mtm]<0);
+  const gw=wins.reduce((a,r)=>a+r[R.mtm],0), gl=losses.reduce((a,r)=>a+r[R.mtm],0);
+  const taxTO=closed.reduce((a,r)=>a+Math.abs(r[R.mtm]),0);
+
+  /* monthly */
+  const mm={}; rows.forEach(r=>{ const k=r[2].slice(0,7); mm[k]=(mm[k]||0)+r[R.mtm]; });
+  const mks=Object.keys(mm).sort(), tm=thisMonth();
+  const excl=mks.filter(k=>CONFIG.AVG_EXCLUDE_MONTHS.includes(k)||k>tm);
+  const avgM=mks.filter(k=>!excl.includes(k)); const avg=avgM.length?avgM.reduce((a,k)=>a+mm[k],0)/avgM.length:null;
+
+  /* periods */
+  const pm={};
+  rows.forEach(r=>{ const k=pKey(r[2]); const p=pm[k]||(pm[k]={k,mtm:0,n:0,w:0,cl:0,to:0,gw:0,gl:0,open:0}); p.mtm+=r[R.mtm]; p.n++;
+    if(isClosed(r)){ p.cl++; p.to+=Math.abs(r[R.mtm]); if(r[R.mtm]>0){p.w++;p.gw+=r[R.mtm]} else if(r[R.mtm]<0) p.gl+=r[R.mtm]; } else p.open++; });
+  const per=Object.values(pm).sort((a,b)=>a.k<b.k?-1:1);
+  const best=per.reduce((a,p)=>!a||p.mtm>a.mtm?p:a,null), worst=per.reduce((a,p)=>!a||p.mtm<a.mtm?p:a,null);
+  const gname={week:"week",month:"month",fy:"year"}[S.gran];
+
+  /* drawdown by expiry (precise) and month-end (chart) */
+  const em={}; rows.forEach(r=>em[r[2]]=(em[r[2]]||0)+r[R.mtm]);
+  let c=0,pk=0,mdd=0; Object.keys(em).sort().forEach(d=>{ c+=em[d]; pk=Math.max(pk,c); mdd=Math.min(mdd,c-pk); });
+  let c2=0,pk2=0; const cumS=[], ddS=[]; mks.forEach(k=>{ c2+=mm[k]; pk2=Math.max(pk2,c2); cumS.push(c2); ddS.push(c2-pk2); });
+
+  /* charges */
+  const selM=S.months.size?[...S.months].sort():mks;
+  const rFrom=selM.length?selM[0]+"-01":"", rTo=selM.length?selM[selM.length-1]+"-31":"";
+  const chIn=CHG.filter(x=>x.from<=rTo&&x.to>=rFrom);
+  const chTot=chIn.reduce((a,x)=>a+x.stt+x.sebi+x.txn+x.stamp+x.igst,0);
+  const net=narrowed()?null:tot-chTot;
+  const openN=rows.filter(r=>!isClosed(r)).length;
+
+  /* KPI tiles */
+  const fys=fyList();
+  const fyTile=`<div class="k fy"><div class="l">Financial year</div><div class="chips">${fys.map(f=>`<button class="chip ${S.fys.has(f)?"on":""}" data-fy="${f}">${fyLabel(f)}</button>`).join("")}</div><div class="s">Apr–Mar · expiry basis · multi-select</div></div>`;
+  const k=[
+    ["Gross MTM",inrS(tot),cls(tot),`${rows.length} contracts${openN?` · ${openN} open`:""}`],
+    ["Charges",narrowed()?"n/a":inrS(chTot),"",narrowed()?"not split by filter":"STT, exch, SEBI, stamp, GST"],
+    ["Net P&L",net===null?"n/a":inrS(net),net===null?"":cls(net),net===null?"needs all filters = All":"gross MTM less charges"],
+    ["Premium turnover (tax)",inrS(taxTO),"","Σ |MTM| of closed contracts"],
+    ["Avg profit / month",avg===null?"–":inrS(avg),avg===null?"":cls(avg),`${avgM.length} months${excl.length?" · excl. "+excl.map(mLabel).join(", "):""}`],
+    ["Win rate",closed.length?pct(wins.length/closed.length):"–","",`${wins.length} W / ${losses.length} L (closed)`],
+    ["Profit factor",gl?(gw/Math.abs(gl)).toFixed(2):"–","",`gains ${inrS(gw)} · losses ${inrS(gl)}`],
+    ["Avg win / avg loss",wins.length&&losses.length?`${(gw/wins.length/Math.abs(gl/losses.length)).toFixed(2)}×`:"–","",`${wins.length?inrS(gw/wins.length):"–"} vs ${losses.length?inrS(gl/losses.length):"–"}`],
+    ["Max drawdown",inrS(mdd),mdd<0?"neg":"","peak-to-trough, by expiry"],
+    [`Best / worst ${gname}`,best?`<span class="${cls(best.mtm)}">${inrS(best.mtm)}</span> <span style="font-size:15px" class="${cls(worst.mtm)}">/ ${inrS(worst.mtm)}</span>`:"–","",best?`${pLabel(best.k)} / ${pLabel(worst.k)}`:""],
+    [`Profitable ${gname}s`,per.length?`${per.filter(p=>p.mtm>0).length} / ${per.length}`:"–","",per.length?pct(per.filter(p=>p.mtm>0).length/per.length)+" hit rate":""]
+  ];
+  $("kpis").innerHTML=fyTile+k.map(x=>`<div class="k"><div class="l">${x[0]}</div><div class="v ${x[2]}">${x[1]}</div><div class="s">${x[3]}</div></div>`).join("");
+  $("kpis").querySelectorAll("[data-fy]").forEach(b=>b.onclick=()=>{ const f=+b.dataset.fy; if(S.fys.has(f)){ if(S.fys.size>1) S.fys.delete(f); } else S.fys.add(f); S.months.clear(); render(); });
+
+  /* period chart */
+  $("t-period").textContent=`Gross MTM by ${gname}`;
+  $("t-ptbl").textContent=`${gname[0].toUpperCase()+gname.slice(1)} summary`;
+  mk("cPeriod",{type:"bar",data:{labels:per.map(p=>pLabel(p.k)),datasets:[{data:per.map(p=>p.mtm),backgroundColor:per.map(p=>S.gran==="month"&&S.months.size&&!S.months.has(p.k)?css("--line"):colorBy(p.mtm)),borderRadius:5,maxBarThickness:64}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:250},layout:{padding:{top:6}},scales:axes(false),
+      onHover:(e,el)=>{e.native.target.style.cursor=el.length&&S.gran==="month"?"pointer":"default"},
+      onClick:(e,el)=>{ if(!el.length||S.gran!=="month") return; const kk=per[el[0].index].k; S.months.has(kk)?S.months.delete(kk):S.months.add(kk); render(); },
+      plugins:{legend:{display:false},vl:{on:true,fmt:v=>per.length<=26?inrL(v):""},
+        tooltip:{...tipBase(),callbacks:{label:c=>{const p=per[c.dataIndex]; return [`MTM  ${inr(p.mtm)}`,`Contracts  ${p.n}${p.open?` (${p.open} open)`:""}`,`Win rate  ${p.cl?pct(p.w/p.cl):"–"}`,`Turnover (tax)  ${inrS(p.to)}`];}}}}}});
+
+  /* cumulative */
+  mk("cCum",{data:{labels:mks.map(mLabel),datasets:[
+    {type:"line",label:"Cumulative MTM",data:cumS,borderColor:css("--acc"),backgroundColor:css("--acc"),pointRadius:4,pointHoverRadius:6,borderWidth:2.5,tension:.25},
+    {type:"bar",label:"Drawdown from peak",data:ddS,backgroundColor:css("--neg")+"99",borderRadius:3,maxBarThickness:40}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:250},interaction:{mode:"index",intersect:false},scales:axes(false),
+      plugins:{legend:{display:true,position:"top",align:"end",labels:{color:css("--mut"),boxWidth:10,boxHeight:10,usePointStyle:true}},vl:{on:false},
+        tooltip:{...tipBase(),displayColors:true,callbacks:{label:c=>` ${c.dataset.label}: ${inr(c.parsed.y)}`}}}}});
+
+  /* CE/PE */
+  const od={CE:{mtm:0,n:0,w:0,cl:0},PE:{mtm:0,n:0,w:0,cl:0}};
+  rows.forEach(r=>{ const o=od[r[R.opt]]; if(!o) return; o.mtm+=r[R.mtm]; o.n++; if(isClosed(r)){o.cl++; if(r[R.mtm]>0) o.w++;} });
+  const ol=["CE","PE"];
+  mk("cOpt",{type:"bar",data:{labels:ol,datasets:[{data:ol.map(o=>od[o].mtm),backgroundColor:ol.map(o=>S.opt&&S.opt!==o?css("--line"):colorBy(od[o].mtm)),borderRadius:6,maxBarThickness:70}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:250},scales:axes(false),
+      onHover:(e,el)=>{e.native.target.style.cursor=el.length?"pointer":"default"},
+      onClick:(e,el)=>{ if(!el.length) return; const o=ol[el[0].index]; S.opt=S.opt===o?"":o; render(); },
+      plugins:{legend:{display:false},vl:{on:true,fmt:v=>inrL(v)},tooltip:{...tipBase(),callbacks:{label:c=>`MTM  ${inr(c.parsed.y)}`}}}}});
+  $("optTbl").innerHTML=`<table><tr><th></th><th>Contracts</th><th>Win rate</th><th>MTM</th></tr>${ol.map(o=>`<tr><td><b>${o}</b></td><td>${od[o].n}</td><td>${od[o].cl?pct(od[o].w/od[o].cl):"–"}</td><td class="${cls(od[o].mtm)}">${inrS(od[o].mtm)}</td></tr>`).join("")}</table>`;
+
+  /* symbols */
+  const sm={}; rows.forEach(r=>{ const s=sm[r[1]]||(sm[r[1]]={m:0,n:0}); s.m+=r[R.mtm]; s.n++; });
+  const sa=Object.entries(sm).sort((a,b)=>b[1].m-a[1].m);
+  $("symBox").style.height=Math.max(220,sa.length*26+40)+"px";
+  mk("cSym",{type:"bar",data:{labels:sa.map(x=>x[0]),datasets:[{data:sa.map(x=>x[1].m),backgroundColor:sa.map(x=>colorBy(x[1].m)),borderRadius:4,maxBarThickness:18}]},
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,animation:{duration:250},scales:axes(true),
+      onHover:(e,el)=>{e.native.target.style.cursor=el.length?"pointer":"default"},
+      onClick:(e,el)=>{ if(!el.length) return; const s=sa[el[0].index][0]; S.sym=S.sym===s?"":s; if(S.sym) S.inst=""; render(); },
+      plugins:{legend:{display:false},vl:{on:true,fmt:v=>Math.abs(v)>=1e5?inrL(v):inrS(v)},tooltip:{...tipBase(),callbacks:{label:c=>[`MTM  ${inr(c.parsed.x)}`,`Contracts  ${sa[c.dataIndex][1].n}`]}}}}});
+
+  /* buckets */
+  const B=[[-Infinity,-1e5,"< -1L"],[-1e5,-5e4,"-1L to -50K"],[-5e4,-2e4,"-50K to -20K"],[-2e4,0,"-20K to 0"],[0,2e4,"0 to 20K"],[2e4,5e4,"20K to 50K"],[5e4,1e5,"50K to 1L"],[1e5,Infinity,"> 1L"]];
+  const bk=B.map(b=>({l:b[2],n:0,m:0,lo:b[0]}));
+  closed.forEach(r=>{ const v=r[R.mtm]; const i=B.findIndex(b=>v>=b[0]&&v<b[1]); if(i>=0){bk[i].n++;bk[i].m+=v;} });
+  mk("cBucket",{type:"bar",data:{labels:bk.map(b=>b.l),datasets:[{data:bk.map(b=>b.m),backgroundColor:bk.map(b=>b.lo<0?css("--neg"):css("--pos")),borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:250},scales:(()=>{const a=axes(false);a.x.ticks.autoSkip=false;a.x.ticks.font={size:10};return a;})(),
+      plugins:{legend:{display:false},vl:{on:true,fmt:(v,i)=>bk[i].n?`${bk[i].n}`:""},tooltip:{...tipBase(),callbacks:{label:c=>[`Total MTM  ${inr(bk[c.dataIndex].m)}`,`Contracts  ${bk[c.dataIndex].n}`,`Avg  ${bk[c.dataIndex].n?inr(bk[c.dataIndex].m/bk[c.dataIndex].n):"–"}`]}}}}});
+
+  /* period table */
+  const T=per.reduce((a,p)=>({n:a.n+p.n,cl:a.cl+p.cl,w:a.w+p.w,gw:a.gw+p.gw,gl:a.gl+p.gl,mtm:a.mtm+p.mtm,to:a.to+p.to}),{n:0,cl:0,w:0,gw:0,gl:0,mtm:0,to:0});
+  table("periodTbl",[
+    {k:"k",l:"Period",v:p=>p.k,f:p=>pLabel(p.k)},
+    {k:"n",l:"Contracts",v:p=>p.n,f:p=>p.n+(p.open?` <span class="note">(${p.open} open)</span>`:"")},
+    {k:"wr",l:"Win rate",v:p=>p.cl?p.w/p.cl:0,f:p=>p.cl?pct(p.w/p.cl):"–"},
+    {k:"gw",l:"Gross profit",v:p=>p.gw,f:p=>inrS(p.gw),c:()=>"pos"},
+    {k:"gl",l:"Gross loss",v:p=>p.gl,f:p=>inrS(p.gl),c:()=>"neg"},
+    {k:"mtm",l:"MTM",v:p=>p.mtm,f:p=>inrS(p.mtm),c:p=>cls(p.mtm)},
+    {k:"to",l:"Premium turnover (tax)",v:p=>p.to,f:p=>inrS(p.to)}
+  ],per,{k:"k",d:1},per.length>1?`<tr class="tot"><td>Total</td><td>${T.n}</td><td>${T.cl?pct(T.w/T.cl):"–"}</td><td class="pos">${inrS(T.gw)}</td><td class="neg">${inrS(T.gl)}</td><td class="${cls(T.mtm)}">${inrS(T.mtm)}</td><td>${inrS(T.to)}</td></tr>`:"");
+
+  /* contracts */
+  const cc=[
+    {k:"c",l:"Contract",v:r=>r[1]+r[4],f:r=>`<b>${r[1]}</b> ${r[4]} ${r[3]}`},
+    {k:"e",l:"Expiry",v:r=>r[2],f:r=>fmtD(r[2])},
+    {k:"q",l:"Qty",v:r=>r[R.pq]},
+    {k:"m",l:"MTM",v:r=>r[R.mtm],f:r=>inr(r[R.mtm]),c:r=>cls(r[R.mtm])}];
+  table("win",cc,closed.filter(r=>r[R.mtm]>0).sort((a,b)=>b[R.mtm]-a[R.mtm]).slice(0,10),{k:"m",d:-1});
+  table("loss",cc,closed.filter(r=>r[R.mtm]<0).sort((a,b)=>a[R.mtm]-b[R.mtm]).slice(0,10),{k:"m",d:1});
+  table("open",[cc[0],cc[1],{k:"nq",l:"Net qty",v:r=>r[R.nq]},{k:"nv",l:"Net value",v:r=>r[R.nv],f:r=>inr(r[R.nv])},{k:"m",l:"MTM",v:r=>r[R.mtm],f:r=>inr(r[R.mtm]),c:r=>cls(r[R.mtm])}],
+    filtered(true).filter(r=>!isClosed(r)),{k:"e",d:1});
+  table("chg",[
+    {k:"p",l:"Statement period",v:x=>x.from,f:x=>`${fmtD(x.from)} – ${fmtD(x.to)}`},
+    {k:"stt",l:"STT",v:x=>x.stt,f:x=>inr(x.stt)},{k:"txn",l:"Txn",v:x=>x.txn,f:x=>inr(x.txn)},{k:"sebi",l:"SEBI",v:x=>x.sebi,f:x=>inr(x.sebi)},
+    {k:"st",l:"Stamp",v:x=>x.stamp,f:x=>inr(x.stamp)},{k:"ig",l:"GST",v:x=>x.igst,f:x=>inr(x.igst)},
+    {k:"t",l:"Total",v:x=>x.stt+x.txn+x.sebi+x.stamp+x.igst,f:x=>`<b>${inr(x.stt+x.txn+x.sebi+x.stamp+x.igst)}</b>`}],CHG,{k:"p",d:1});
+}
+
+/* ---------- events ---------- */
+const seg=(id,k,extra)=>$(id).querySelectorAll("button").forEach(b=>b.onclick=()=>{ S[k]=b.dataset.v; if(extra) extra(); render(); });
+seg("status-f","status"); seg("inst","inst"); seg("opt","opt"); seg("gran","gran");
+$("sym").onchange=e=>{ S.sym=e.target.value; render(); };
+$("clear").onclick=clearAll;
+$("refresh").onclick=load;
+$("upl").onclick=()=>$("file").click();
+$("theme").onclick=()=>{ const r=document.documentElement; const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches; r.dataset.theme=dark?"light":"dark"; try{localStorage.setItem("optdash-theme",r.dataset.theme)}catch(e){} render(); };
+try{ const t=localStorage.getItem("optdash-theme"); if(t) document.documentElement.dataset.theme=t; }catch(e){}
+$("file").onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{
+    const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});
+    const first=wb.SheetNames.find(n=>!/charge/i.test(n))||wb.SheetNames[0];
+    const aoa=XLSX.utils.sheet_to_json(wb.Sheets[first],{header:1,raw:false,defval:""});
+    const rows=tableToRows(aoa); if(!rows.length) throw new Error("no contract rows found");
+    ALL=rows; const cn=wb.SheetNames.find(n=>/charge/i.test(n));
+    CHG=cn?tableToCharges(XLSX.utils.sheet_to_json(wb.Sheets[cn],{header:1,raw:false,defval:""})):footerCharges(aoa,rows);
+    srcLabel="Uploaded: "+f.name; afterLoad();
+  }catch(err){ $("banner").style.display="block"; $("banner").textContent="Could not read that file: "+err.message; }
+  e.target.value="";
+};
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
+load();
+if(CONFIG.DATA_CSV_URL&&CONFIG.REFRESH_MINUTES>0) setInterval(load,CONFIG.REFRESH_MINUTES*60000);
+</script>
+</body>
+</html>
